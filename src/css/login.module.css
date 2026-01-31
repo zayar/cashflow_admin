@@ -1,0 +1,15 @@
+/* login.css */
+html, body {
+    height: 100%;           /* Ensure the html and body take full height */
+    margin: 0;              /* Remove default margin */
+    overflow: hidden;       /* Prevent scrolling on the body */
+}
+
+.body {
+    background-color: #254394; /* Set background color */
+    height: 100vh;             /* Full height of the viewport */
+    display: flex;             /* Use flexbox for centering */
+    justify-content: center;   /* Center horizontally */
+    align-items: center;       /* Center vertically */
+}
+

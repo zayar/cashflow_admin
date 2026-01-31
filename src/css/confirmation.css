@@ -1,0 +1,45 @@
+.confirmation-modal.topLeft {
+    top: 20px;
+    left: 20px;
+    position: absolute;
+  }
+  
+  .confirmation-modal.topCenter {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+  }
+  
+  .confirmation-modal.topRight {
+    top: 20px;
+    right: 20px;
+    position: absolute;
+  }
+  
+  .confirmation-modal.bottomLeft {
+    bottom: 20px;
+    left: 20px;
+    position: absolute;
+  }
+  
+  .confirmation-modal.bottomCenter {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+  }
+  
+  .confirmation-modal.bottomRight {
+    bottom: 20px;
+    right: 20px;
+    position: absolute;
+  }
+  
+  .confirmation-modal.center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    position: absolute;
+  }
+  
