@@ -58,9 +58,6 @@ type BusinessDetails = {
 };
 
 const DEFAULT_TEMP_PASSWORD = "default123";
-const DEFAULT_BASE_CURRENCY_ID = 1;
-const DEFAULT_STATE_ID = 1;
-const DEFAULT_TOWNSHIP_ID = 1;
 const DEFAULT_REPORT_BASIS = "Accrual";
 
 const fiscalYears = [
@@ -208,6 +205,14 @@ const BusinessManagementPage: React.FC = () => {
   const submitCreate = async () => {
     try {
       const v = await form.validateFields();
+      if (!v.name) {
+        message.error("Business name is required");
+        return;
+      }
+      if (!v.email) {
+        message.error("Owner login email is required");
+        return;
+      }
       const input: any = {
         name: v.name,
         email: v.email,
@@ -218,11 +223,6 @@ const BusinessManagementPage: React.FC = () => {
         reportBasis: DEFAULT_REPORT_BASIS,
         timezone: v.timezone,
         migrationDate: toISOStringOrUndefined(v.migrationDate),
-
-        // Many deployments assume these seeded IDs exist.
-        baseCurrencyId: DEFAULT_BASE_CURRENCY_ID,
-        stateId: DEFAULT_STATE_ID,
-        townshipId: DEFAULT_TOWNSHIP_ID,
       };
 
       const res = await createBusiness({ variables: { input } });
