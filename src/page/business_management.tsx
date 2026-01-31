@@ -58,6 +58,10 @@ type BusinessDetails = {
 };
 
 const DEFAULT_TEMP_PASSWORD = "default123";
+const DEFAULT_BASE_CURRENCY_ID = 1;
+const DEFAULT_STATE_ID = 1;
+const DEFAULT_TOWNSHIP_ID = 1;
+const DEFAULT_REPORT_BASIS = "Accrual";
 
 const fiscalYears = [
   "Jan",
@@ -86,6 +90,20 @@ function copy(text: string, successMsg: string) {
 function toISOStringOrUndefined(d?: Dayjs) {
   if (!d) return undefined;
   return d.toDate().toISOString();
+}
+
+function getBestApolloErrorMessage(err: any): string {
+  // ApolloError.graphQLErrors
+  const gqlMsg = err?.graphQLErrors?.[0]?.message;
+  if (gqlMsg) return gqlMsg;
+
+  // ApolloError.networkError (ServerError) may include a JSON body
+  const result = err?.networkError?.result;
+  if (typeof result === "string") return result;
+  if (result?.error) return String(result.error);
+  if (Array.isArray(result?.errors) && result.errors[0]?.message) return String(result.errors[0].message);
+
+  return err?.message ?? "Request failed";
 }
 
 function statusTag(isActive?: boolean) {
@@ -188,35 +206,43 @@ const BusinessManagementPage: React.FC = () => {
   const back = () => setCreateStep((s) => Math.max(0, s - 1));
 
   const submitCreate = async () => {
-    const v = await form.validateFields();
-    const input: any = {
-      name: v.name,
-      email: v.email,
-      country: v.country,
-      city: v.city,
-      address: v.address,
-      fiscalYear: v.fiscalYear,
-      timezone: v.timezone,
-      migrationDate: toISOStringOrUndefined(v.migrationDate),
-      // NOTE: backend validates stateId/townshipId/baseCurrencyId only when provided.
-      // We intentionally omit them for SaaS onboarding simplicity.
-    };
+    try {
+      const v = await form.validateFields();
+      const input: any = {
+        name: v.name,
+        email: v.email,
+        country: v.country,
+        city: v.city,
+        address: v.address,
+        fiscalYear: v.fiscalYear,
+        reportBasis: DEFAULT_REPORT_BASIS,
+        timezone: v.timezone,
+        migrationDate: toISOStringOrUndefined(v.migrationDate),
 
-    const res = await createBusiness({ variables: { input } });
-    const created = res.data?.createBusiness;
-    if (!created?.id) return;
+        // Many deployments assume these seeded IDs exist.
+        baseCurrencyId: DEFAULT_BASE_CURRENCY_ID,
+        stateId: DEFAULT_STATE_ID,
+        townshipId: DEFAULT_TOWNSHIP_ID,
+      };
 
-    // Backend behavior (current): CreateBusiness creates Owner role + first user:
-    // - username/email = business.email
-    // - password = "default123"
-    setCreateResult({
-      businessId: created.id,
-      ownerUsername: v.email,
-      tempPassword: DEFAULT_TEMP_PASSWORD,
-    });
-    message.success("Business created successfully");
-    await listQ.refetch();
-    setCreateStep(3);
+      const res = await createBusiness({ variables: { input } });
+      const created = res.data?.createBusiness;
+      if (!created?.id) return;
+
+      // Backend behavior (current): CreateBusiness creates Owner role + first user:
+      // - username/email = business.email
+      // - password = "default123"
+      setCreateResult({
+        businessId: created.id,
+        ownerUsername: v.email,
+        tempPassword: DEFAULT_TEMP_PASSWORD,
+      });
+      message.success("Business created successfully");
+      await listQ.refetch();
+      setCreateStep(3);
+    } catch (e: any) {
+      message.error(getBestApolloErrorMessage(e));
+    }
   };
 
   const columns = [
@@ -541,7 +567,12 @@ const BusinessManagementPage: React.FC = () => {
                   <Descriptions.Item label="Status">Active</Descriptions.Item>
                 </Descriptions>
                 {createBusinessState.error && (
-                  <Alert type="error" showIcon message={createBusinessState.error.message} style={{ marginTop: 16 }} />
+                  <Alert
+                    type="error"
+                    showIcon
+                    message={getBestApolloErrorMessage(createBusinessState.error)}
+                    style={{ marginTop: 16 }}
+                  />
                 )}
               </>
             )}

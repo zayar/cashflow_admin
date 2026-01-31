@@ -1,4 +1,4 @@
-import { HomeOutlined, LogoutOutlined, ShopOutlined, ToolOutlined } from '@ant-design/icons';
+import { HomeOutlined, LogoutOutlined, ShopOutlined, SyncOutlined, ToolOutlined } from '@ant-design/icons';
 import { Button, Layout, Menu, theme } from 'antd';
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -22,6 +22,11 @@ const menus: Array<{
             name: "Business",
             path: paths.bizs,
             icon: <ShopOutlined size={45} />
+        },
+        {
+            name: "Integration",
+            path: paths.integration,
+            icon: <SyncOutlined size={45} />
         },
         {
             name: "Tool",

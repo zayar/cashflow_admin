@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from '../page/home';
 import Login from '../page/login';
 import BusinessManagementPage from '../page/business_management';
+import BusinessPage from '../page/business';
 import ProtectedRoute from './protected_route';
 import paths from './paths';
 import AdminLayout from '../layout/admin_layout';
@@ -15,6 +16,7 @@ const AppRoutes = () => (
         <Route path={paths.home} element={<AdminLayout />}>
           <Route index element={<Home />} />
           <Route path={paths.bizs} element={<BusinessManagementPage />} />
+          <Route path={paths.integration} element={<BusinessPage />} />
           <Route path={paths.tools} element={<ToolPage />} />
         </Route>
       </Route>
