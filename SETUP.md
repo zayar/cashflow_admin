@@ -31,7 +31,7 @@ yarn dev
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `VITE_GRAPHQL_URI` | GraphQL endpoint | `https://api-dev.thecashflow.app/query` or `http://localhost:4000/query` |
+| `VITE_GRAPHQL_URI` | GraphQL endpoint | `/query` (recommended on Firebase Hosting) or `http://localhost:4000/query` |
 
 See `.env.example`. Vite only exposes variables prefixed with `VITE_`.
 
@@ -72,7 +72,7 @@ Pushes to **main** or **master** trigger a build and deploy to Firebase Hosting 
 2. In GitHub: repo **zayar/cashflow_admin** → **Settings** → **Secrets and variables** → **Actions**.
 3. **New repository secret**: name `FIREBASE_TOKEN`, value = the token from step 1.
 
-**Optional:** To use a different API URL in production builds, add a secret `VITE_GRAPHQL_URI` (e.g. `https://api.thecashflow.app/query`). If unset, the workflow uses `https://api-dev.thecashflow.app/query`.
+**Optional:** To use a different API URL in production builds, add a secret `VITE_GRAPHQL_URI` (e.g. `https://api-dev.thecashflow.app/query`). If unset, the workflow uses `/query` (Firebase Hosting rewrite proxy).
 
 Workflow file: [.github/workflows/deploy.yml](.github/workflows/deploy.yml).
 
@@ -95,7 +95,7 @@ If you later want one repo for “all apps,” a clean approach is a **monorepo*
 
 ## 7. Custom domain (e.g. admin.thecashflow.app)
 
-1. Firebase Console → project **cashflow-483906** → **Hosting** → site **admin**.
+1. Firebase Console → project **cashflow-483906** → **Hosting** → site **admin-cashflow**.
 2. **Add custom domain** → e.g. `admin.thecashflow.app` or `admin.cashflow.com`.
 3. Add the DNS records Firebase shows you.
 4. Deploy: `yarn build && yarn deploy`.
@@ -135,4 +135,4 @@ Use that user’s **username** and **password** to log in to the admin app. The 
 | Firebase project | cashflow-483906 (same as main app) |
 | Hosting site | admin-cashflow |
 | Auth | GraphQL login; backend returns `role: "Admin"` when `role_id = 0` |
-| API | GraphQL at `VITE_GRAPHQL_URI` (e.g. api-dev.thecashflow.app) |
+| API | GraphQL at `VITE_GRAPHQL_URI` (recommended: `/query` via Firebase Hosting rewrite) |

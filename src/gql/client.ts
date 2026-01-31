@@ -4,11 +4,13 @@ import LocalStorageService from '../service/local_storage';
 
 // Create an HttpLink to the GraphQL API (see .env.example)
 const httpLink = new HttpLink({
-    uri: import.meta.env.VITE_GRAPHQL_URI ?? 'https://api-dev.thecashflow.app/query',
+    // Prefer relative `/query` so Firebase Hosting can proxy to Cloud Run.
+    // Override via VITE_GRAPHQL_URI for local dev or other environments.
+    uri: import.meta.env.VITE_GRAPHQL_URI ?? '/query',
 });
 
 // Set up the Authorization header using setContext
-const authLink = setContext((_, { headers }) => {
+const authLink = setContext((_operation: any, { headers }: any) => {
     // Retrieve the token from localStorage (or any storage mechanism you're using)
     const token = LocalStorageService.getToken();
 
@@ -24,8 +26,8 @@ const authLink = setContext((_, { headers }) => {
 
 // When the server returns errors and data is null/missing, Apollo cache throws
 // "Missing field 'login' while writing result". Normalize so the cache gets { login: null }.
-const loginErrorNormalizer = new ApolloLink((operation, forward) => {
-    return forward(operation).map((response) => {
+const loginErrorNormalizer = new ApolloLink((operation: any, forward: any) => {
+    return forward(operation).map((response: any) => {
         if (operation.operationName !== 'Login') return response;
         const hasErrors = (response.errors?.length ?? 0) > 0;
         if (hasErrors && response.data == null) {

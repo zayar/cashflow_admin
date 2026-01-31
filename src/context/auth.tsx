@@ -19,13 +19,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(LocalStorageService.getToken() ? true : false);
     const login = async (username: string, password: string) => {
         let success: boolean = false;
-        const authResult = await client.mutate<ApolloResult<"login", LoginResp>>({ mutation: loginQuery, variables: loginVar(username, password), errorPolicy: "ignore" })
+        const authResult = await client.mutate<ApolloResult<"login", LoginResp>>({
+            mutation: loginQuery,
+            variables: loginVar(username, password),
+            // Keep errors for UI/console diagnostics.
+            errorPolicy: "all",
+        })
         if (authResult.data?.login && authResult.data.login.role === "Admin") {
             success = true;
             LocalStorageService.saveToken(authResult.data.login)
             setIsAuthenticated(true);
         } else {
-            message.error('Login failed. Please try again.')
+            const msg = authResult.errors?.[0]?.message ?? 'Login failed. Please try again.'
+            // Helpful for debugging in production.
+            // eslint-disable-next-line no-console
+            console.warn("Login failed", { username, errors: authResult.errors });
+            message.error(msg)
         }
         return success;
     };
