@@ -62,3 +62,12 @@ export const TOGGLE_ACTIVE_BUSINESS = gql`
   }
 `;
 
+export const RESET_PASSWORD_USER = gql`
+  mutation ResetPasswordUser($businessId: String!) {
+    resetPasswordUser(businessId: $businessId) {
+      username
+      tempPassword
+    }
+  }
+`;
+

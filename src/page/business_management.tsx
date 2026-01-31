@@ -32,6 +32,7 @@ import {
   CREATE_BUSINESS,
   GET_BUSINESS_ADMIN,
   LIST_ALL_BUSINESSES,
+  RESET_PASSWORD_USER,
   TOGGLE_ACTIVE_BUSINESS,
 } from "../gql/businessManagement";
 import type { ApolloResult, Business } from "../store";
@@ -150,6 +151,10 @@ const BusinessManagementPage: React.FC = () => {
   const [toggleActiveBusiness, toggleActiveState] = useMutation<
     ApolloResult<"toggleActiveBusiness", { id: string; isActive: boolean }>
   >(TOGGLE_ACTIVE_BUSINESS);
+
+  const [resetPasswordUser, resetPasswordState] = useMutation<
+    ApolloResult<"resetPasswordUser", { username: string; tempPassword: string }>
+  >(RESET_PASSWORD_USER);
 
   const rows = useMemo(() => {
     const data = (listQ.data?.listAllBusiness ?? []).map((b) => ({ ...b, key: b.id }));
@@ -309,7 +314,75 @@ const BusinessManagementPage: React.FC = () => {
           >
             {record.isActive ? "Disable" : "Enable"}
           </Button>
-          <Button disabled title="Backend API not available yet">
+          <Button
+            loading={resetPasswordState.loading}
+            onClick={() => {
+              Modal.confirm({
+                title: "Reset business owner password?",
+                content: (
+                  <Space direction="vertical" size={4}>
+                    <Typography.Text>
+                      This will generate a new temporary password for the business owner login.
+                    </Typography.Text>
+                    <Typography.Text type="secondary">
+                      Business: <Typography.Text strong>{record.name}</Typography.Text>
+                    </Typography.Text>
+                    <Typography.Text type="secondary">
+                      Business ID: <Typography.Text code>{record.id}</Typography.Text>
+                    </Typography.Text>
+                    <Typography.Text type="warning">
+                      This will also invalidate all existing sessions for that user.
+                    </Typography.Text>
+                  </Space>
+                ),
+                okText: "Reset password",
+                okButtonProps: { danger: true },
+                onOk: async () => {
+                  const res = await resetPasswordUser({ variables: { businessId: record.id } });
+                  const out = res.data?.resetPasswordUser;
+                  if (!out) throw new Error("No response from server");
+
+                  Modal.info({
+                    title: "New owner credentials",
+                    width: 560,
+                    content: (
+                      <Space direction="vertical" style={{ width: "100%" }}>
+                        <Typography.Text>
+                          Share these credentials with the business owner. This password is shown only once.
+                        </Typography.Text>
+                        <Descriptions bordered size="small" column={1}>
+                          <Descriptions.Item label="Username">
+                            <Space>
+                              <Typography.Text code>{out.username}</Typography.Text>
+                              <Button
+                                size="small"
+                                type="text"
+                                icon={<CopyOutlined />}
+                                onClick={() => copy(out.username, "Username copied")}
+                              />
+                            </Space>
+                          </Descriptions.Item>
+                          <Descriptions.Item label="Temporary password">
+                            <Space>
+                              <Typography.Text code>{out.tempPassword}</Typography.Text>
+                              <Button
+                                size="small"
+                                type="text"
+                                icon={<CopyOutlined />}
+                                onClick={() => copy(out.tempPassword, "Password copied")}
+                              />
+                            </Space>
+                          </Descriptions.Item>
+                        </Descriptions>
+                      </Space>
+                    ),
+                  });
+
+                  message.success("Password reset successfully");
+                },
+              });
+            }}
+          >
             Reset password
           </Button>
         </Space>
