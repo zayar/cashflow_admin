@@ -136,3 +136,32 @@ Use that user’s **username** and **password** to log in to the admin app. The 
 | Hosting site | admin-cashflow |
 | Auth | GraphQL login; backend returns `role: "Admin"` when `role_id = 0` |
 | API | GraphQL at `VITE_GRAPHQL_URI` (recommended: `/query` via Firebase Hosting rewrite) |
+
+---
+
+## Business Management (Admin)
+
+### APIs used
+
+- **List businesses**: `Query.listAllBusiness`
+- **Business details**: `Query.getBusinessAdmin(id: String!)`
+- **Create business**: `Mutation.createBusiness(input: NewBusiness!)`
+- **Disable/Enable business**: `Mutation.toggleActiveBusiness(id: UUID!, isActive: Boolean!)`
+
+### Important backend behavior (today)
+
+When you call `createBusiness`, the backend automatically creates:
+
+- a Role named **Owner**
+- the first Owner user with:
+  - **username/email** = `input.email`
+  - **temporary password** = `default123` (hard-coded in backend)
+
+### Missing fields / recommended backend additions
+
+- **Business list created date**: `listAllBusiness` returns `AllBusiness` which does **not** include `createdAt` / `updatedAt`. The UI currently shows Created as **N/A**. Recommend adding `createdAt` to `AllBusiness`.
+- **Plan / billing status**: no fields exist in `AllBusiness` / `Business` today. Add `plan`, `billingStatus`, `trialEndsAt`, etc. if needed.
+- **Set/generate owner password during create**: backend currently hard-codes the Owner password to `default123`. To support a “set initial password / generate password” flow, add one of:
+  - `createBusinessWithOwner(input: NewBusiness!, owner: NewOwnerUserInput!): BusinessOnboardResult!` (returns owner username + temp password), or
+  - `resetUserPassword(username: String!): ResetPasswordResult!` (admin-only), or
+  - allow `NewBusiness` to include `ownerPassword` and use it in `CreateDefaultOwner`.
