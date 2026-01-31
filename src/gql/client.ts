@@ -1,4 +1,4 @@
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { ApolloClient, ApolloLink, InMemoryCache, HttpLink } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import LocalStorageService from '../service/local_storage';
 
@@ -22,10 +22,26 @@ const authLink = setContext((_, { headers }) => {
     };
 });
 
+// When the server returns errors and data is null/missing, Apollo cache throws
+// "Missing field 'login' while writing result". Normalize so the cache gets { login: null }.
+const loginErrorNormalizer = new ApolloLink((operation, forward) => {
+    return forward(operation).map((response) => {
+        if (operation.operationName !== 'Login') return response;
+        const hasErrors = (response.errors?.length ?? 0) > 0;
+        if (hasErrors && response.data == null) {
+            return { ...response, data: { login: null } };
+        }
+        if (hasErrors && response.data != null && !('login' in response.data)) {
+            return { ...response, data: { ...response.data, login: null } };
+        }
+        return response;
+    });
+});
+
 // Create the Apollo Client
 const client = new ApolloClient({
-    link: authLink.concat(httpLink), // Combine authLink with httpLink
-    cache: new InMemoryCache(),       // Set up cache
+    link: authLink.concat(loginErrorNormalizer.concat(httpLink)),
+    cache: new InMemoryCache(),
 });
 
 export default client;
