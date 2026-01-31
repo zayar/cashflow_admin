@@ -204,7 +204,9 @@ const BusinessManagementPage: React.FC = () => {
 
   const submitCreate = async () => {
     try {
-      const v = await form.validateFields();
+      // On the Confirm step, form items aren't mounted, so validateFields() can return {}
+      // even though values exist. We already validated required fields in step 1.
+      const v = form.getFieldsValue(true);
       if (!v.name) {
         message.error("Business name is required");
         return;
