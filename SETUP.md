@@ -32,6 +32,12 @@ yarn dev
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `VITE_GRAPHQL_URI` | GraphQL endpoint | `/query` (recommended on Firebase Hosting) or `http://localhost:4000/query` |
+| `VITE_FIREBASE_API_KEY` | Firebase web API key | from Firebase Console (project `cashflow-483906`) |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain | `cashflow-483906.firebaseapp.com` |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase project ID | `cashflow-483906` |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket | `cashflow-483906.firebasestorage.app` |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender id | from Firebase Console |
+| `VITE_FIREBASE_APP_ID` | Firebase app id | from Firebase Console |
 
 See `.env.example`. Vite only exposes variables prefixed with `VITE_`.
 

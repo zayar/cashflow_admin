@@ -1,20 +1,32 @@
-
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAmN-1RvCRVDMUysX-XwYHXfWJHward-Sc",
-  authDomain: "piti-book.firebaseapp.com",
-  projectId: "piti-book",
-  storageBucket: "piti-book.firebasestorage.app",
-  messagingSenderId: "642822843535",
-  appId: "1:642822843535:web:43f9017bb79382e33b54fa"
+const REQUIRED_PROJECT_ID = "cashflow-483906";
+
+const requireEnv = (value: string | undefined, name: string): string => {
+  if (!value || !value.trim()) {
+    throw new Error(`Missing required env var: ${name}`);
+  }
+  return value.trim();
 };
 
-// Initialize Firebase
+const firebaseConfig = {
+  apiKey: requireEnv(import.meta.env.VITE_FIREBASE_API_KEY, "VITE_FIREBASE_API_KEY"),
+  authDomain: requireEnv(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN, "VITE_FIREBASE_AUTH_DOMAIN"),
+  projectId: requireEnv(import.meta.env.VITE_FIREBASE_PROJECT_ID, "VITE_FIREBASE_PROJECT_ID"),
+  storageBucket: requireEnv(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET, "VITE_FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: requireEnv(
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    "VITE_FIREBASE_MESSAGING_SENDER_ID"
+  ),
+  appId: requireEnv(import.meta.env.VITE_FIREBASE_APP_ID, "VITE_FIREBASE_APP_ID"),
+};
+
+if (firebaseConfig.projectId !== REQUIRED_PROJECT_ID) {
+  throw new Error(
+    `Invalid Firebase project: ${firebaseConfig.projectId}. Expected ${REQUIRED_PROJECT_ID}.`
+  );
+}
+
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
