@@ -1,0 +1,200 @@
+.cf-admin-layout {
+  min-height: 100vh;
+  background: transparent;
+  position: relative;
+}
+
+.cf-admin-layout::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 5% 92%, rgba(114, 170, 205, 0.18), transparent 36%),
+    radial-gradient(circle at 98% 8%, rgba(162, 214, 230, 0.2), transparent 24%);
+}
+
+.cf-admin-header {
+  margin: 14px 20px 0;
+  height: auto;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: 18px;
+  border: 1px solid var(--cf-border);
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(17, 50, 79, 0.12);
+  line-height: 1;
+  position: sticky;
+  top: 10px;
+  z-index: 50;
+}
+
+.cf-admin-brand {
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.cf-admin-brand-mark {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  background: linear-gradient(150deg, #f2f8ff, #e4f1f9);
+  border: 1px solid #d4e4f1;
+  display: grid;
+  place-items: center;
+}
+
+.cf-admin-logo {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+}
+
+.cf-admin-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+.cf-admin-brand-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cf-ink);
+  letter-spacing: -0.01em;
+}
+
+.cf-admin-brand-subtitle {
+  font-size: 12px;
+  color: var(--cf-ink-muted);
+  font-weight: 500;
+}
+
+.cf-admin-nav-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.cf-admin-menu.ant-menu-horizontal {
+  border-bottom: 0;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+}
+
+.cf-admin-menu.ant-menu-horizontal > .ant-menu-item {
+  border-radius: 10px;
+  margin-inline: 5px;
+  color: #35506b;
+  font-weight: 600;
+}
+
+.cf-admin-menu.ant-menu-horizontal > .ant-menu-item::after {
+  display: none;
+}
+
+.cf-admin-menu.ant-menu-horizontal > .ant-menu-item-selected {
+  background: var(--cf-brand-soft);
+  color: var(--cf-brand-strong);
+}
+
+.cf-admin-menu.ant-menu-horizontal > .ant-menu-item:hover {
+  background: #edf5fb;
+  color: #0d547f;
+}
+
+.cf-admin-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cf-admin-user-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #d5e5ef;
+  background: #f5f9fd;
+  color: #31506b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cf-admin-logout {
+  border-radius: 10px;
+  font-weight: 600;
+  color: #31506b;
+}
+
+.cf-admin-content {
+  padding: 16px 20px 0;
+  overflow: auto;
+}
+
+.cf-admin-content-inner {
+  min-height: calc(100vh - 180px);
+  padding: 28px;
+  border-radius: 22px;
+  border: 1px solid var(--cf-border);
+  background: var(--cf-surface);
+  box-shadow: 0 14px 35px rgba(17, 50, 79, 0.09);
+}
+
+.cf-admin-footer {
+  text-align: center;
+  color: var(--cf-ink-muted);
+  background: transparent;
+  padding: 12px 20px 20px;
+  font-size: 13px;
+}
+
+@media (max-width: 1080px) {
+  .cf-admin-header {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 10px;
+  }
+
+  .cf-admin-brand {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .cf-admin-nav-wrap {
+    width: 100%;
+  }
+
+  .cf-admin-menu.ant-menu-horizontal {
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .cf-admin-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .cf-admin-header,
+  .cf-admin-content {
+    margin-inline: 0;
+    padding-inline: 12px;
+  }
+
+  .cf-admin-content-inner {
+    padding: 16px;
+    border-radius: 16px;
+  }
+}

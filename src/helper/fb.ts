@@ -1,9 +1,10 @@
 import { getDoc, doc, setDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { getDb } from "../config/firebase";
 
 export const readDoc = async (path: string) => {
   console.log('path', path)
   try {
+    const db = getDb();
     const sn = await getDoc(doc(db, path));
     return sn;
   } catch (error) {
@@ -18,6 +19,7 @@ export const writeDoc = async (args: {
 }) => {
   const { col, docId, data } = args;
   try {
+    const db = getDb();
     const docRef = doc(db, col, docId);
     // Set the document with the data
     await setDoc(docRef, data, { merge: true });

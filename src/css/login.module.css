@@ -1,15 +1,198 @@
-/* login.css */
-html, body {
-    height: 100%;           /* Ensure the html and body take full height */
-    margin: 0;              /* Remove default margin */
-    overflow: hidden;       /* Prevent scrolling on the body */
+:global(html),
+:global(body) {
+    height: 100%;
+    margin: 0;
 }
 
 .body {
-    background-color: #254394; /* Set background color */
-    height: 100vh;             /* Full height of the viewport */
-    display: flex;             /* Use flexbox for centering */
-    justify-content: center;   /* Center horizontally */
-    align-items: center;       /* Center vertically */
+    overflow: hidden;
 }
 
+.page {
+    min-height: 100vh;
+    padding: 24px;
+    position: relative;
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at 18% 22%, rgba(112, 170, 206, 0.32) 0, transparent 34%),
+        radial-gradient(circle at 82% 10%, rgba(84, 164, 201, 0.24) 0, transparent 28%),
+        linear-gradient(145deg, #0f2b45, #0f4c73 55%, #1b6b92);
+}
+
+.orbA,
+.orbB {
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(22px);
+    pointer-events: none;
+}
+
+.orbA {
+    width: 220px;
+    height: 220px;
+    left: 7%;
+    top: 10%;
+    background: rgba(156, 220, 248, 0.27);
+}
+
+.orbB {
+    width: 280px;
+    height: 280px;
+    right: 8%;
+    bottom: 8%;
+    background: rgba(138, 190, 231, 0.23);
+}
+
+.panel {
+    width: min(1040px, 100%);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    border: 1px solid rgba(221, 236, 250, 0.44);
+    box-shadow: 0 28px 58px rgba(8, 28, 45, 0.4);
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(7px);
+}
+
+.promoSide {
+    padding: 40px 38px;
+    background:
+        linear-gradient(180deg, rgba(232, 244, 252, 0.95), rgba(225, 239, 251, 0.88)),
+        linear-gradient(150deg, #f8fcff, #eaf5fd);
+    border-right: 1px solid rgba(195, 218, 233, 0.58);
+}
+
+.brandPill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px 7px 9px;
+    border-radius: 999px;
+    background: #ffffffcf;
+    border: 1px solid #d7e6f4;
+    color: #1a3a59;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.brandLogo {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.title {
+    margin-top: 16px !important;
+    margin-bottom: 10px !important;
+    color: #112338 !important;
+    letter-spacing: -0.02em;
+}
+
+.description {
+    margin: 0 !important;
+    color: #4e6781 !important;
+    max-width: 460px;
+}
+
+.featureGrid {
+    margin-top: 24px;
+    display: grid;
+    gap: 10px;
+}
+
+.featureCard {
+    border: 1px solid #d5e5f1;
+    border-radius: 14px;
+    background: #ffffffd9;
+    padding: 12px 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #35506b;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.featureIcon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    color: #0d547f;
+    background: #e7f2f9;
+}
+
+.formSide {
+    padding: 40px 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.94);
+}
+
+.kicker {
+    color: #5b738b;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.formTitle {
+    margin-top: 10px !important;
+    margin-bottom: 8px !important;
+    color: #112338 !important;
+}
+
+.formCopy {
+    margin-bottom: 22px !important;
+    color: #5b6f86 !important;
+}
+
+.formSide :global(.ant-form-item-label > label) {
+    color: #31506b;
+    font-weight: 600;
+}
+
+.formSide :global(.ant-input-affix-wrapper),
+.formSide :global(.ant-input) {
+    border-radius: 11px !important;
+}
+
+.formSide :global(.ant-btn-primary) {
+    border-radius: 11px;
+    font-weight: 700;
+}
+
+@media (max-width: 900px) {
+    .panel {
+        grid-template-columns: 1fr;
+        max-width: 560px;
+    }
+
+    .promoSide {
+        border-right: 0;
+        border-bottom: 1px solid rgba(195, 218, 233, 0.58);
+        padding: 28px;
+    }
+
+    .formSide {
+        padding: 28px;
+    }
+}
+
+@media (max-width: 640px) {
+    .page {
+        padding: 14px;
+    }
+
+    .promoSide,
+    .formSide {
+        padding: 22px;
+    }
+}

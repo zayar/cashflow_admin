@@ -1,31 +1,94 @@
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --cf-bg-start: #f6f9ff;
+  --cf-bg-end: #eef4fb;
+  --cf-surface: #ffffff;
+  --cf-border: #d8e5f1;
+  --cf-brand: #0f5f8f;
+  --cf-brand-strong: #0a496e;
+  --cf-brand-soft: #e7f2f9;
+  --cf-ink: #112338;
+  --cf-ink-muted: #5b6f86;
+  --cf-shadow-lg: 0 24px 56px rgba(17, 50, 79, 0.13);
+
+  font-family: "Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Customize the scrollbar appearance */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--cf-ink);
+  background:
+    radial-gradient(circle at 12% 12%, #dbe9f7 0, transparent 32%),
+    radial-gradient(circle at 92% 20%, #e3f2fa 0, transparent 28%),
+    linear-gradient(155deg, var(--cf-bg-start), var(--cf-bg-end));
+}
+
+a {
+  color: inherit;
+}
+
+.cf-page-title {
+  margin: 0;
+  color: var(--cf-ink);
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.cf-page-subtitle {
+  margin: 0;
+  color: var(--cf-ink-muted);
+}
+
+.cf-surface-card {
+  background: var(--cf-surface);
+  border: 1px solid var(--cf-border);
+  border-radius: 18px;
+  box-shadow: 0 12px 28px rgba(17, 50, 79, 0.08);
+}
+
+.cf-soft-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--cf-brand-soft);
+  color: var(--cf-brand-strong);
+  font-weight: 600;
+  font-size: 12px;
+}
+
 ::-webkit-scrollbar {
-  width: 3px; /* Set scrollbar width */
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #254394; /* Scrollbar color */
-  border-radius: 5px; /* Rounded scrollbar */
+  background: #8bb0ca;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #254394; /* Scrollbar color on hover */
+  background: #6797ba;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1; /* Background of the scrollbar track */
+  background: transparent;
 }

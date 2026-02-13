@@ -15,7 +15,11 @@ import {
   message,
 } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
-import { app } from "../config/firebase";
+import {
+  getFirebaseProjectId,
+  getMissingFirebaseEnvVars,
+  isFirebaseConfigured,
+} from "../config/firebase";
 import { LIST_ALL_BUSINESSES } from "../gql/businessManagement";
 import {
   createTelegramLinkCode,
@@ -30,7 +34,9 @@ type FormValues = {
   expiresInMinutes: number;
 };
 
-const projectId = app.options.projectId ?? "(unknown)";
+const projectId = getFirebaseProjectId();
+const firebaseConfigured = isFirebaseConfigured();
+const missingFirebaseEnvVars = getMissingFirebaseEnvVars();
 
 const formatDateTime = (value?: number): string => {
   if (!value) return "-";
@@ -84,6 +90,10 @@ const ToolPage: React.FC = () => {
   );
 
   const refresh = async (businessId?: string): Promise<void> => {
+    if (!firebaseConfigured) {
+      setRows([]);
+      return;
+    }
     const targetBusinessId = businessId ?? selectedBusinessId;
     if (!targetBusinessId) {
       setRows([]);
@@ -121,6 +131,10 @@ const ToolPage: React.FC = () => {
   }, [selectedBusinessId]);
 
   const onGenerate = async (values: FormValues): Promise<void> => {
+    if (!firebaseConfigured) {
+      message.error("Firebase configuration is missing.");
+      return;
+    }
     const business = businesses.find((biz) => biz.id === values.businessId);
     if (!business) {
       message.error("Select a valid business first");
@@ -220,6 +234,14 @@ const ToolPage: React.FC = () => {
           </>
         }
       />
+      {!firebaseConfigured ? (
+        <Alert
+          type="error"
+          showIcon
+          message="Firebase env is not configured for this build"
+          description={`Missing: ${missingFirebaseEnvVars.join(", ")}`}
+        />
+      ) : null}
 
       <Card title="Generate Link Code">
         <Form<FormValues>
@@ -250,7 +272,12 @@ const ToolPage: React.FC = () => {
             <InputNumber min={1} max={1440} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" loading={loading}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              disabled={!firebaseConfigured}
+            >
               Generate
             </Button>
           </Form.Item>
@@ -259,6 +286,7 @@ const ToolPage: React.FC = () => {
               icon={<ReloadOutlined />}
               onClick={() => void refresh()}
               loading={loading}
+              disabled={!firebaseConfigured}
             >
               Refresh
             </Button>
@@ -304,7 +332,7 @@ const ToolPage: React.FC = () => {
       >
         <Table<TelegramLinkCode>
           rowKey="id"
-          loading={loading}
+          loading={loading && firebaseConfigured}
           columns={columns}
           dataSource={rows}
           pagination={{ pageSize: 10 }}

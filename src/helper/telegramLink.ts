@@ -7,7 +7,7 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { getDb } from "../config/firebase";
 
 export type TelegramLinkCode = {
   id: string;
@@ -34,6 +34,7 @@ const randomDigits = (length: number): string => {
 };
 
 const isCodeAvailable = async (code: string): Promise<boolean> => {
+  const db = getDb();
   const q = query(
     collection(db, LINK_CODES_COLLECTION),
     where("code", "==", code),
@@ -53,6 +54,7 @@ export const createTelegramLinkCode = async (input: {
   expiresInMinutes: number;
   createdBy?: string;
 }): Promise<TelegramLinkCode> => {
+  const db = getDb();
   const expiresInMs = Math.max(1, input.expiresInMinutes) * 60 * 1000;
   const createdAt = Date.now();
   const expiresAt = createdAt + expiresInMs;
@@ -87,6 +89,7 @@ export const createTelegramLinkCode = async (input: {
 export const listTelegramLinkCodesByBusiness = async (
   businessId: string
 ): Promise<TelegramLinkCode[]> => {
+  const db = getDb();
   const q = query(
     collection(db, LINK_CODES_COLLECTION),
     where("businessId", "==", businessId),
@@ -113,6 +116,7 @@ export const listTelegramLinkCodesByBusiness = async (
 };
 
 export const revokeTelegramLinkCode = async (id: string): Promise<void> => {
+  const db = getDb();
   await setDoc(
     doc(db, LINK_CODES_COLLECTION, id),
     {
