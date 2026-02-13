@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Button, Form, Input, Typography } from 'antd';
 import { LockOutlined, SafetyCertificateOutlined, ThunderboltOutlined, UserOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
 import { useAuth } from '../context/auth';
 import paths from '../router/paths';
 import styles from '../css/login.module.css';
@@ -14,6 +13,7 @@ const Login: React.FC = () => {
     const { state } = useLocation();
     const [loading, setLoading] = useState(false);
     const nextTo = state?.from || paths.home;
+    const logo = "/cashflow_logo.png";
 
     useEffect(() => {
         const token = LocalStorageService.getToken();

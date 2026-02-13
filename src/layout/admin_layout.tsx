@@ -2,7 +2,6 @@ import { HomeOutlined, LogoutOutlined, ShopOutlined, SyncOutlined, ToolOutlined,
 import { Button, Layout, Menu } from 'antd';
 import React from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo.png';
 import ConfirmationModal from '../components/confirmation';
 import { useAuth } from '../context/auth';
 import '../css/admin-layout.css';
@@ -48,6 +47,7 @@ const AdminLayout: React.FC = () => {
     const { pathname } = useLocation();
     const { logout } = useAuth();
     const selectedKey = resolveMenuKey(pathname);
+    const logo = "/cashflow_logo.png";
 
     return (
         <Layout className="cf-admin-layout">
