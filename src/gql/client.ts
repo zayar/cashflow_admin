@@ -18,6 +18,8 @@ const authLink = setContext((_operation: any, { headers }: any) => {
     if (token) {
         headerWithAuth = { ...headerWithAuth, ["token"]: token }
     }
+    // Identify caller type for backend entitlement checks.
+    headerWithAuth = { ...headerWithAuth, ["X-Client-App"]: "admin" };
     // Return the headers with the Authorization token
     return {
         headers: headerWithAuth

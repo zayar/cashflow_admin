@@ -27,13 +27,18 @@ import {
   message,
 } from "antd";
 import dayjs, { Dayjs } from "dayjs";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
+  CANCEL_BUSINESS_SUBSCRIPTION,
   CREATE_BUSINESS,
+  EXTEND_BUSINESS_SUBSCRIPTION,
+  GET_BUSINESS_ENTITLEMENT,
   GET_BUSINESS_ADMIN,
+  LIST_BUSINESS_SUBSCRIPTION_OVERVIEWS,
   LIST_ALL_BUSINESSES,
   RESET_PASSWORD_USER,
   TOGGLE_ACTIVE_BUSINESS,
+  UPSERT_BUSINESS_SUBSCRIPTION,
 } from "../gql/businessManagement";
 import type { ApolloResult, Business } from "../store";
 
@@ -55,6 +60,26 @@ type BusinessDetails = {
   timezone?: string;
   migrationDate?: string;
   createdAt?: string;
+  updatedAt?: string;
+};
+
+type BusinessEntitlement = {
+  businessId: string;
+  plan: "LITE" | "PRO";
+  startsAt?: string;
+  endsAt?: string;
+  status: "ACTIVE" | "EXPIRED" | "INACTIVE";
+  allowedClients: string[];
+};
+
+type BusinessSubscriptionOverview = {
+  businessId: string;
+  businessName: string;
+  plan: "LITE" | "PRO";
+  startsAt?: string;
+  endsAt?: string;
+  status: "ACTIVE" | "EXPIRED" | "INACTIVE";
+  allowedClients: string[];
   updatedAt?: string;
 };
 
@@ -109,6 +134,28 @@ function statusTag(isActive?: boolean) {
   return <Tag color="green">Active</Tag>;
 }
 
+function subscriptionStatusTag(status?: string) {
+  const normalized = String(status || "").toUpperCase();
+  if (normalized === "ACTIVE") return <Tag color="green">ACTIVE</Tag>;
+  if (normalized === "EXPIRED") return <Tag color="red">EXPIRED</Tag>;
+  if (normalized === "INACTIVE") return <Tag color="orange">INACTIVE</Tag>;
+  return <Tag>{normalized || "N/A"}</Tag>;
+}
+
+function planTag(plan?: string) {
+  const normalized = String(plan || "").toUpperCase();
+  if (normalized === "PRO") return <Tag color="blue">PRO</Tag>;
+  if (normalized === "LITE") return <Tag color="gold">LITE</Tag>;
+  return <Tag>{normalized || "N/A"}</Tag>;
+}
+
+function formatDateTime(value?: string) {
+  if (!value) return "-";
+  const d = dayjs(value);
+  if (!d.isValid()) return "-";
+  return d.format("YYYY-MM-DD HH:mm");
+}
+
 const BusinessManagementPage: React.FC = () => {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "active" | "disabled">("all");
@@ -122,6 +169,7 @@ const BusinessManagementPage: React.FC = () => {
   } | null>(null);
 
   const [detailBizId, setDetailBizId] = useState<string | null>(null);
+  const [subscriptionBizId, setSubscriptionBizId] = useState<string | null>(null);
 
   const [form] = Form.useForm<{
     // business
@@ -134,8 +182,19 @@ const BusinessManagementPage: React.FC = () => {
     migrationDate?: Dayjs;
     timezone?: string;
   }>();
+  const [subscriptionForm] = Form.useForm<{
+    plan: "LITE" | "PRO";
+    durationMonths: 1 | 3 | 6 | 12;
+    customEndsAt?: Dayjs;
+  }>();
 
   const listQ = useQuery<ApolloResult<"listAllBusiness", Business[]>>(LIST_ALL_BUSINESSES, {
+    fetchPolicy: "cache-and-network",
+  });
+
+  const subscriptionsQ = useQuery<
+    ApolloResult<"listBusinessSubscriptionOverviews", BusinessSubscriptionOverview[]>
+  >(LIST_BUSINESS_SUBSCRIPTION_OVERVIEWS, {
     fetchPolicy: "cache-and-network",
   });
 
@@ -143,6 +202,15 @@ const BusinessManagementPage: React.FC = () => {
     variables: detailBizId ? { id: detailBizId } : undefined,
     skip: !detailBizId,
   });
+
+  const subscriptionDetailQ = useQuery<ApolloResult<"getBusinessEntitlement", BusinessEntitlement>>(
+    GET_BUSINESS_ENTITLEMENT,
+    {
+      variables: subscriptionBizId ? { businessId: subscriptionBizId } : undefined,
+      skip: !subscriptionBizId,
+      fetchPolicy: "cache-and-network",
+    }
+  );
 
   const [createBusiness, createBusinessState] = useMutation<
     ApolloResult<"createBusiness", { id: string; email: string; name: string }>
@@ -155,6 +223,26 @@ const BusinessManagementPage: React.FC = () => {
   const [resetPasswordUser, resetPasswordState] = useMutation<
     ApolloResult<"resetPasswordUser", { username: string; tempPassword: string }>
   >(RESET_PASSWORD_USER);
+
+  const [upsertBusinessSubscription, upsertBusinessSubscriptionState] = useMutation<
+    ApolloResult<"upsertBusinessSubscription", BusinessEntitlement>
+  >(UPSERT_BUSINESS_SUBSCRIPTION);
+
+  const [extendBusinessSubscription, extendBusinessSubscriptionState] = useMutation<
+    ApolloResult<"extendBusinessSubscription", BusinessEntitlement>
+  >(EXTEND_BUSINESS_SUBSCRIPTION);
+
+  const [cancelBusinessSubscription, cancelBusinessSubscriptionState] = useMutation<
+    ApolloResult<"cancelBusinessSubscription", BusinessEntitlement>
+  >(CANCEL_BUSINESS_SUBSCRIPTION);
+
+  const subscriptionByBusinessId = useMemo(() => {
+    const map = new Map<string, BusinessSubscriptionOverview>();
+    for (const item of subscriptionsQ.data?.listBusinessSubscriptionOverviews ?? []) {
+      map.set(item.businessId, item);
+    }
+    return map;
+  }, [subscriptionsQ.data]);
 
   const rows = useMemo(() => {
     const data = (listQ.data?.listAllBusiness ?? []).map((b) => ({ ...b, key: b.id }));
@@ -172,6 +260,42 @@ const BusinessManagementPage: React.FC = () => {
       return matchesSearch && matchesStatus;
     });
   }, [listQ.data, search, status]);
+
+  const selectedSubscriptionBusiness = useMemo(
+    () => (listQ.data?.listAllBusiness ?? []).find((b) => b.id === subscriptionBizId) ?? null,
+    [listQ.data, subscriptionBizId]
+  );
+
+  const currentEntitlement = useMemo<BusinessEntitlement | null>(() => {
+    if (subscriptionDetailQ.data?.getBusinessEntitlement) {
+      return subscriptionDetailQ.data.getBusinessEntitlement;
+    }
+    if (!subscriptionBizId) return null;
+    const fromList = subscriptionByBusinessId.get(subscriptionBizId);
+    if (!fromList) return null;
+    return {
+      businessId: fromList.businessId,
+      plan: fromList.plan,
+      startsAt: fromList.startsAt,
+      endsAt: fromList.endsAt,
+      status: fromList.status,
+      allowedClients: fromList.allowedClients,
+    };
+  }, [subscriptionDetailQ.data, subscriptionByBusinessId, subscriptionBizId]);
+
+  useEffect(() => {
+    if (!subscriptionBizId) return;
+    const plan = currentEntitlement?.plan === "LITE" ? "LITE" : "PRO";
+    subscriptionForm.setFieldsValue({
+      plan,
+      durationMonths: 1,
+      customEndsAt: currentEntitlement?.endsAt ? dayjs(currentEntitlement.endsAt) : undefined,
+    });
+  }, [currentEntitlement, subscriptionBizId, subscriptionForm]);
+
+  const refreshSubscriptions = async () => {
+    await Promise.all([subscriptionsQ.refetch(), subscriptionDetailQ.refetch(), listQ.refetch()]);
+  };
 
   const openCreate = () => {
     setCreateResult(null);
@@ -252,6 +376,69 @@ const BusinessManagementPage: React.FC = () => {
     }
   };
 
+  const openSubscriptionDrawer = (businessId: string) => {
+    setSubscriptionBizId(businessId);
+  };
+
+  const handleSaveSubscription = async () => {
+    if (!subscriptionBizId) return;
+    try {
+      const values = await subscriptionForm.validateFields();
+      const payload: {
+        businessId: string;
+        plan: "LITE" | "PRO";
+        durationMonths?: 1 | 3 | 6 | 12;
+        customEndsAt?: string;
+      } = {
+        businessId: subscriptionBizId,
+        plan: values.plan,
+        durationMonths: values.durationMonths,
+      };
+      if (values.customEndsAt) {
+        payload.customEndsAt = values.customEndsAt.toDate().toISOString();
+      }
+
+      await upsertBusinessSubscription({
+        variables: {
+          input: payload,
+        },
+      });
+      message.success("Subscription updated");
+      await refreshSubscriptions();
+    } catch (err: any) {
+      message.error(getBestApolloErrorMessage(err));
+    }
+  };
+
+  const handleExtendSubscription = async (months: 1 | 3 | 6 | 12) => {
+    if (!subscriptionBizId) return;
+    try {
+      await extendBusinessSubscription({
+        variables: {
+          input: {
+            businessId: subscriptionBizId,
+            durationMonths: months,
+          },
+        },
+      });
+      message.success(`Subscription extended by ${months} month${months > 1 ? "s" : ""}`);
+      await refreshSubscriptions();
+    } catch (err: any) {
+      message.error(getBestApolloErrorMessage(err));
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!subscriptionBizId) return;
+    try {
+      await cancelBusinessSubscription({ variables: { businessId: subscriptionBizId } });
+      message.success("Subscription deactivated");
+      await refreshSubscriptions();
+    } catch (err: any) {
+      message.error(getBestApolloErrorMessage(err));
+    }
+  };
+
   const columns = [
     {
       title: "Business Name",
@@ -284,6 +471,24 @@ const BusinessManagementPage: React.FC = () => {
       render: (isActive: boolean) => statusTag(isActive),
     },
     {
+      title: "Plan",
+      key: "subscriptionPlan",
+      width: 120,
+      render: (_: unknown, record: Business) => {
+        const sub = subscriptionByBusinessId.get(record.id);
+        return planTag(sub?.plan);
+      },
+    },
+    {
+      title: "Subscription",
+      key: "subscriptionStatus",
+      width: 150,
+      render: (_: unknown, record: Business) => {
+        const sub = subscriptionByBusinessId.get(record.id);
+        return subscriptionStatusTag(sub?.status);
+      },
+    },
+    {
       title: "Created",
       key: "createdAt",
       width: 150,
@@ -292,7 +497,7 @@ const BusinessManagementPage: React.FC = () => {
     {
       title: "Actions",
       key: "actions",
-      width: 260,
+      width: 330,
       render: (_: any, record: Business) => (
         <Space>
           <Button
@@ -314,6 +519,7 @@ const BusinessManagementPage: React.FC = () => {
           >
             {record.isActive ? "Disable" : "Enable"}
           </Button>
+          <Button onClick={() => openSubscriptionDrawer(record.id)}>Subscription</Button>
           <Button
             loading={resetPasswordState.loading}
             onClick={() => {
@@ -399,8 +605,8 @@ const BusinessManagementPage: React.FC = () => {
         <Space>
           <Button
             icon={<ReloadOutlined />}
-            onClick={() => listQ.refetch()}
-            loading={listQ.loading}
+            onClick={() => Promise.all([listQ.refetch(), subscriptionsQ.refetch()])}
+            loading={listQ.loading || subscriptionsQ.loading}
           >
             Refresh
           </Button>
@@ -439,6 +645,9 @@ const BusinessManagementPage: React.FC = () => {
 
         {listQ.error && (
           <Alert type="error" message={listQ.error.message} showIcon />
+        )}
+        {subscriptionsQ.error && (
+          <Alert style={{ marginTop: 12 }} type="error" message={subscriptionsQ.error.message} showIcon />
         )}
 
         <Table
@@ -485,6 +694,141 @@ const BusinessManagementPage: React.FC = () => {
             <Descriptions.Item label="Fiscal year">{detailsQ.data.getBusinessAdmin.fiscalYear || "-"}</Descriptions.Item>
             <Descriptions.Item label="Created">{detailsQ.data.getBusinessAdmin.createdAt || "-"}</Descriptions.Item>
           </Descriptions>
+        )}
+      </Drawer>
+
+      <Drawer
+        title="Business subscription"
+        width={640}
+        open={!!subscriptionBizId}
+        onClose={() => setSubscriptionBizId(null)}
+      >
+        {!subscriptionBizId && <Typography.Text>Select a business.</Typography.Text>}
+        {subscriptionBizId && (
+          <Space direction="vertical" style={{ width: "100%" }} size={16}>
+            {subscriptionDetailQ.loading && <Typography.Text>Loading subscription...</Typography.Text>}
+            {subscriptionDetailQ.error && (
+              <Alert type="error" showIcon message={getBestApolloErrorMessage(subscriptionDetailQ.error)} />
+            )}
+
+            <Descriptions bordered size="small" column={1}>
+              <Descriptions.Item label="Business">
+                {selectedSubscriptionBusiness?.name || currentEntitlement?.businessId || "-"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Business ID">
+                <Typography.Text code>{subscriptionBizId}</Typography.Text>
+              </Descriptions.Item>
+              <Descriptions.Item label="Plan">{planTag(currentEntitlement?.plan)}</Descriptions.Item>
+              <Descriptions.Item label="Status">{subscriptionStatusTag(currentEntitlement?.status)}</Descriptions.Item>
+              <Descriptions.Item label="Start">{formatDateTime(currentEntitlement?.startsAt)}</Descriptions.Item>
+              <Descriptions.Item label="End">{formatDateTime(currentEntitlement?.endsAt)}</Descriptions.Item>
+              <Descriptions.Item label="Allowed apps">
+                <Space wrap>
+                  {(currentEntitlement?.allowedClients ?? []).map((app) => (
+                    <Tag key={app}>{app}</Tag>
+                  ))}
+                </Space>
+              </Descriptions.Item>
+              <Descriptions.Item label="Last updated">
+                {formatDateTime(subscriptionByBusinessId.get(subscriptionBizId)?.updatedAt)}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Card size="small" title="Create / Update subscription">
+              <Form form={subscriptionForm} layout="vertical">
+                <Form.Item
+                  name="plan"
+                  label="Plan"
+                  rules={[{ required: true, message: "Plan is required" }]}
+                >
+                  <Select
+                    options={[
+                      { value: "LITE", label: "LITE (PWA only)" },
+                      { value: "PRO", label: "PRO (PWA + WEB)" },
+                    ]}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="durationMonths"
+                  label="Duration"
+                  rules={[{ required: true, message: "Duration is required" }]}
+                >
+                  <Select
+                    options={[
+                      { value: 1, label: "1 month" },
+                      { value: 3, label: "3 months" },
+                      { value: 6, label: "6 months" },
+                      { value: 12, label: "12 months" },
+                    ]}
+                  />
+                </Form.Item>
+                <Form.Item name="customEndsAt" label="Override custom end date (optional)">
+                  <DatePicker showTime style={{ width: "100%" }} />
+                </Form.Item>
+                <Space>
+                  <Button
+                    type="primary"
+                    onClick={handleSaveSubscription}
+                    loading={upsertBusinessSubscriptionState.loading}
+                  >
+                    Save subscription
+                  </Button>
+                  <Button onClick={() => subscriptionForm.setFieldValue("customEndsAt", undefined)}>
+                    Clear override
+                  </Button>
+                </Space>
+              </Form>
+            </Card>
+
+            <Card size="small" title="Extend subscription">
+              <Space wrap>
+                <Button
+                  loading={extendBusinessSubscriptionState.loading}
+                  onClick={() => handleExtendSubscription(1)}
+                >
+                  +1 month
+                </Button>
+                <Button
+                  loading={extendBusinessSubscriptionState.loading}
+                  onClick={() => handleExtendSubscription(3)}
+                >
+                  +3 months
+                </Button>
+                <Button
+                  loading={extendBusinessSubscriptionState.loading}
+                  onClick={() => handleExtendSubscription(6)}
+                >
+                  +6 months
+                </Button>
+                <Button
+                  loading={extendBusinessSubscriptionState.loading}
+                  onClick={() => handleExtendSubscription(12)}
+                >
+                  +12 months
+                </Button>
+              </Space>
+              <Typography.Paragraph type="secondary" style={{ marginTop: 12, marginBottom: 0 }}>
+                If current subscription is active, extension is added on top of current end date. If expired, extension starts from now.
+              </Typography.Paragraph>
+            </Card>
+
+            <Card size="small" title="Deactivate / Cancel">
+              <Button
+                danger
+                loading={cancelBusinessSubscriptionState.loading}
+                onClick={() =>
+                  Modal.confirm({
+                    title: "Deactivate this subscription now?",
+                    okText: "Deactivate",
+                    okButtonProps: { danger: true },
+                    onOk: handleCancelSubscription,
+                  })
+                }
+              >
+                Deactivate now
+              </Button>
+            </Card>
+          </Space>
         )}
       </Drawer>
 
@@ -724,4 +1068,3 @@ const BusinessManagementPage: React.FC = () => {
 };
 
 export default BusinessManagementPage;
-

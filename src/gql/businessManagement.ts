@@ -71,3 +71,69 @@ export const RESET_PASSWORD_USER = gql`
   }
 `;
 
+export const LIST_BUSINESS_SUBSCRIPTION_OVERVIEWS = gql`
+  query ListBusinessSubscriptionOverviews {
+    listBusinessSubscriptionOverviews {
+      businessId
+      businessName
+      plan
+      startsAt
+      endsAt
+      status
+      allowedClients
+      updatedAt
+    }
+  }
+`;
+
+export const GET_BUSINESS_ENTITLEMENT = gql`
+  query GetBusinessEntitlement($businessId: String) {
+    getBusinessEntitlement(businessId: $businessId) {
+      businessId
+      plan
+      startsAt
+      endsAt
+      status
+      allowedClients
+    }
+  }
+`;
+
+export const UPSERT_BUSINESS_SUBSCRIPTION = gql`
+  mutation UpsertBusinessSubscription($input: UpsertBusinessSubscriptionInput!) {
+    upsertBusinessSubscription(input: $input) {
+      businessId
+      plan
+      startsAt
+      endsAt
+      status
+      allowedClients
+    }
+  }
+`;
+
+export const EXTEND_BUSINESS_SUBSCRIPTION = gql`
+  mutation ExtendBusinessSubscription($input: ExtendBusinessSubscriptionInput!) {
+    extendBusinessSubscription(input: $input) {
+      businessId
+      plan
+      startsAt
+      endsAt
+      status
+      allowedClients
+    }
+  }
+`;
+
+export const CANCEL_BUSINESS_SUBSCRIPTION = gql`
+  mutation CancelBusinessSubscription($businessId: String!) {
+    cancelBusinessSubscription(businessId: $businessId) {
+      businessId
+      plan
+      startsAt
+      endsAt
+      status
+      allowedClients
+    }
+  }
+`;
